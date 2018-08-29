@@ -1,6 +1,9 @@
 <?php 
 
 namespace Hcode\DB;
+//colocamos geralmente o nome do nameSpaco como o nome da pasta anterior
+//para o autoload ele ficar dinamico
+
 
 class Sql {
 

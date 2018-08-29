@@ -1,21 +1,30 @@
 <?php 
 
-require_once("vendor/autoload.php");//
+require_once("vendor/autoload.php");//Do composer. Sempre trazer as dependencias
+
+use \Slim\Slim;//Ambos sao namesapces. Dentro do vendor tenho dezenas de classe.
+use \Hcode\Page;//Pegar as que estao nestes namespace. Carrega somente do Slim e do Hcode
 
 $app = new \Slim\Slim();//
 
 $app->config('debug', true);
 
-$app->get('/', function() {//criacao da Rote / imprimindo ok na tela
-    
+$app->get('/', function() {//criacao da Rota
+    $page = new Page();
+
+    $page->setTpl("index");//carrega o conteudo
+
+    /*
 	//echo "OK";
+	//para criar a classe em um name space é: nomenossovendos\namespace\nomeclasse();
 	$sql = new Hcode\DB\Sql();
 	$results = $sql->select("SELECT * FROM tb_users");
 	echo json_encode($results);
 	//Hcode é o nosso vendor principal
+	*/
 
 });
 
-$app->run();
+$app->run();//roda tudo
 
  ?>

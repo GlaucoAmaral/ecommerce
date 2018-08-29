@@ -12,7 +12,25 @@
     	"rain/raintpl":"3.0.0"
     },
     "autoload": {
+        /*aqui é o autoload das nossas proprias classes que criamos*/
+        /*
+        Exemplo PSR-4:
+        {
+            "autoload": {
+                "psr-4": {
+                    "Zend\\": "vendor/Zend"
+                }
+            }
+        }
+        O autoloader vai usar a pasta vendor/Zend como a pasta do namespace Zend,
+         o namespace \Zend\Acl\Acl vai corresponder ao arquivo vendor/Zend/Acl/Acl.php.
+        */
         "psr-4": {
+            /*Hcode é o nome do nosso vendor. É a raiz. Aula 99*/
+            /*como o namespace da classe Sql chama Hcode\DB ele procura
+            vendor\hcodebr\php-classes\src\DB\nomeDaClasse.php, na qual o nome
+            da classe é a que ele sabe pelos autoload
+            */
             "Hcode\\": "vendor\\hcodebr\\php-classes\\src"
         }
     }
