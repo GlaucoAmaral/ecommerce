@@ -4,6 +4,7 @@ require_once("vendor/autoload.php");//Do composer. Sempre trazer as dependencias
 
 use \Slim\Slim;//Ambos sao namesapces. Dentro do vendor tenho dezenas de classe.
 use \Hcode\Page;//Pegar as que estao nestes namespace. Carrega somente do Slim e do Hcode
+use \Hcode\PageAdmin;
 
 $app = new \Slim\Slim();//
 
@@ -24,6 +25,13 @@ $app->get('/', function() {//criacao da Rota
 	*/
 
 });
+
+$app->get('/admin', function() {//criacao da Rota
+    $page = new PageAdmin();
+
+    $page->setTpl("index");//carrega o conteudo
+});
+
 
 $app->run();//roda tudo
 

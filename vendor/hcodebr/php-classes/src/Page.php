@@ -17,11 +17,12 @@ class Page {
 
 
 
-	public function __construct($opts = array()){
-		$this->options = array_merge($this->defaults, $opts);
+	public function __construct($opts = array(), $tpl_dir = "/views/")
+	{
+		$this->options = array_merge($this->defaults, $opts);//Funde os elementos de dois ou mais arrays de forma que os elementos de um são colocados no final do array anterior. Retorna o array resultante da fusão.
 
 		$config = array(
-			"tpl_dir"       => $_SERVER["DOCUMENT_ROOT"] . "/views/",
+			"tpl_dir"       => $_SERVER["DOCUMENT_ROOT"] . "$tpl_dir",
 			"cache_dir"     => $_SERVER["DOCUMENT_ROOT"] . "/views-cache/",
 			"debug"         => false
 			);
@@ -34,7 +35,8 @@ class Page {
 		$this->tpl->draw("header");
 	}
 
-	public function setTpl($nomeTemplate, $data = array(), $returnHTML = false){
+	public function setTpl($nomeTemplate, $data = array(), $returnHTML = false)
+	{
 
 		$this->setData($data);
 
