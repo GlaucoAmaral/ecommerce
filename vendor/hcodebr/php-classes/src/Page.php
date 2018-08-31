@@ -22,7 +22,7 @@ class Page {
 	public function __construct($opts = array(), $tpl_dir = "/views/")//diretorio de qual footer e header irei carregar.
 	{
 
-		//$this->defaults["data"]["session"] = $_SESSION;
+		//$this->defaults["data"]["session"] = $_SESSION;//
 
 		$this->options = array_merge($this->defaults, $opts);//Funde os elementos de dois ou mais arrays de forma que os elementos de um são colocados no final do array anterior. Retorna o array resultante da fusão.
 

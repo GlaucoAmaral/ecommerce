@@ -1,10 +1,14 @@
 <?php 
 
+session_start(); //inicia se a sessao
+
 require_once("vendor/autoload.php");//Do composer. Sempre trazer as dependencias
 
 use \Slim\Slim;//Ambos sao namesapces. Dentro do vendor tenho dezenas de classe.
 use \Hcode\Page;//Pegar as que estao nestes namespace. Carrega somente do Slim e do Hcode
 use \Hcode\PageAdmin;
+use \Hcode\Teste;
+use \Hcode\Model\User;
 
 $app = new \Slim\Slim();//
 
@@ -27,6 +31,9 @@ $app->get('/', function() {//criacao da Rota
 });
 
 $app->get('/admin', function() {//criacao da Rota
+        
+    User::verifyLogin();//problem here
+
     $page = new PageAdmin();
 
     $page->setTpl("index");//carrega o conteudo
@@ -41,12 +48,29 @@ $app->get('/admin/login', function() {//criacao da Rota
     //como para pagina de login nao carrego o header nem o footer para a pagina de login, passo essas opções para ela no vetor
 
     $page->setTpl("login");//carrega o conteudo
-
-
 });
 
 
+//$app->get('/teste', function(){
+//   $page = new Teste();
+//});
 
+
+$app->post('/admin/login', function(){
+    
+    User::login($_POST["login"], $_POST["password"]);//este metodo estatico da classe user recebera o login e a senha por metodo post 
+
+    header("Location: /admin");//após ser validado, ele é mandado para a tela de admin
+    exit;
+});
+
+
+$app->get('/admin/logout', function(){
+    User::logout();
+
+    header("Location: /admin/login");
+    exit;
+});
 
 
 $app->run();//roda tudo

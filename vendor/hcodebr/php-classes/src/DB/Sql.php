@@ -56,6 +56,10 @@ class Sql {
 
 	public function select($rawQuery, $params = array()):array
 	{
+		//stmt significa comando
+		//PDO::prepare - Prepara uma instrução para execução e retorna um OBJETO de instrução
+		//Prepara uma instrução SQL para ser executada pelo método PDOStatement :: execute (). 
+		//O PARAMETRO É O QUE VOCE VAI FAZER NO BANCO
 
 		$stmt = $this->conn->prepare($rawQuery);
 
