@@ -33,6 +33,22 @@ $app->get('/admin', function() {//criacao da Rota
 });
 
 
+$app->get('/admin/login', function() {//criacao da Rota
+    $page = new PageAdmin([
+        "header"=>false,
+        "footer"=>false
+    ]);
+    //como para pagina de login nao carrego o header nem o footer para a pagina de login, passo essas opções para ela no vetor
+
+    $page->setTpl("login");//carrega o conteudo
+
+
+});
+
+
+
+
+
 $app->run();//roda tudo
 
  ?>

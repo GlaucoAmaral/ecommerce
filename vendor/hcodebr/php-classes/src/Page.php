@@ -10,16 +10,23 @@ use Rain\Tpl; //Quando chamarmos um new Tpl ele sabe de onde pegar
 class Page {
 
 	private $tpl;
-	private $otions = [];
+	private $options = [];
 	private $defaults = [
+		"header"=>true,
+		"footer"=>true,
 		"data" => []
 	];
 
 
 
-	public function __construct($opts = array(), $tpl_dir = "/views/")
+	public function __construct($opts = array(), $tpl_dir = "/views/")//diretorio de qual footer e header irei carregar.
 	{
+
+		//$this->defaults["data"]["session"] = $_SESSION;
+
 		$this->options = array_merge($this->defaults, $opts);//Funde os elementos de dois ou mais arrays de forma que os elementos de um são colocados no final do array anterior. Retorna o array resultante da fusão.
+
+
 
 		$config = array(
 			"tpl_dir"       => $_SERVER["DOCUMENT_ROOT"] . "$tpl_dir",
@@ -30,9 +37,9 @@ class Page {
 
 		$this->tpl = new Tpl();
 
-		$this->setData($this->options["data"] );
+		$this->setData($this->options["data"]);
 
-		$this->tpl->draw("header");
+		if ($this->options['header'] === true) $this->tpl->draw("header");//se a pagina nao precisar carregar o footer e nem o header, nao carrega.
 	}
 
 	public function setTpl($nomeTemplate, $data = array(), $returnHTML = false)
@@ -55,7 +62,7 @@ class Page {
 
 	public function __destruct()
 	{
-		$this->tpl->draw("footer");
+		if ($this->options['footer'] === true) $this->tpl->draw("footer");
 	}
 
 }
