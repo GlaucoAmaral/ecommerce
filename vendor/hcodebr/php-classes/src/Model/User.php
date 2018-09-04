@@ -3,6 +3,7 @@
 namespace Hcode\Model;
 use \Hcode\DB\Sql;
 use \Hcode\Model;
+use \Hcode\Mailer;
 
 class User extends Model{
 	//A classe User é um model
@@ -18,7 +19,7 @@ class User extends Model{
 
 		if(count($results) === 0)//nao encontrou nada(nenhuma linha), pois nada foi retornado do banco de dados
 		{ 
-			return false;////////////
+			return false;////////////	
 			throw new \Exception("Usuario inexistente ou senha inválida.");//coloco a contra barra pois a Exception está no nameSpace principal do PHP e nao dentro do namespace Hcode\Model;					
 		}//pelo menos um resultado temos. Agora verificamos a senha
 

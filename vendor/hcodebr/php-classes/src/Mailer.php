@@ -1,12 +1,10 @@
-/<?php 
+<?php 
 
-namespace HCode;
-
-
+namespace Hcode;
 //vamos usar a classe phpMailer, como ela esta no escopo principal e nao no vendor, nao precisamos coloco o user phpmailer..
 
 
-use Rain\Tpl();
+use Rain\Tpl;
 
 
 
@@ -16,7 +14,7 @@ class Mailer {
 	const PASSWORD = "joaodasilva123";
 	const NAME_FROM = "Hcode Store";
 
-	private $this->mail;
+	private $mail;
 
 	public function __construct($toAddress, $toName, $subject, $tplName, $data = array())
 	{
