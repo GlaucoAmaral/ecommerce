@@ -195,6 +195,7 @@ $app->post("/admin/forgot", function(){
 	//recebo o email da pagina por POST no arrayGlobal $_POST[] no campo "email";
 	$user = User::getForgot($_POST["email"]);
 	header("Location: /admin/forgot/sent");
+	exit;
 
 });
 

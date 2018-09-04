@@ -20,7 +20,7 @@ class Mailer {
 	{
 
 		$config = array(
-			"tpl_dir"       => $_SERVER["DOCUMENT_ROOT"] . "/views/email",
+			"tpl_dir"       => $_SERVER["DOCUMENT_ROOT"] . "/views/email/",
 			"cache_dir"     => $_SERVER["DOCUMENT_ROOT"] . "/views-cache/",
 			"debug"         => false
 			);
@@ -92,7 +92,7 @@ class Mailer {
 
 		//Read an HTML message body from an external file, convert referenced images to embedded,
 		//convert HTML into a basic plain-text alternative body
-		$this->mail->msgHTML();
+		$this->mail->msgHTML($html);
 
 		//Replace the plain text body with one created manually
 		$this->mail->AltBody = 'This is a plain-text message body';
@@ -104,6 +104,7 @@ class Mailer {
 
 	public function send()
 	{
+		//a funcao send() retorna true or false caso o email seja enviado ou não
 		return $this->mail->send();
 	}
 
