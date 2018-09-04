@@ -32,7 +32,7 @@ $app->get('/', function() {//criacao da Rota
 
 $app->get('/admin', function() {//criacao da Rota
         
-    User::verifyLogin();
+    User::verifyLogin();//se passar tudo okay, prossegue para criar a pagina de admin, caso contrario na propria funcao lá é jogado para a rota de login
 
     $page = new PageAdmin();
 
@@ -173,6 +173,38 @@ $app->post("/admin/users/:iduser", function($iduser){//para salvarmos a edicao d
 
     header("Location: /admin/users");
     exit;
+
+});
+
+
+
+$app->get("/admin/forgot", function(){
+	//semelhante a tela de login pois o header e o footer nao tem
+    $page = new PageAdmin([
+        "header"=>false,
+        "footer"=>false
+    ]);
+    //como para pagina de login nao carrego o header nem o footer para a pagina de login, passo essas opções para ela no vetor
+
+    $page->setTpl("forgot");//carrega o conteudo forgot.html
+});
+
+
+
+$app->post("/admin/forgot", function(){
+	//recebo o email da pagina por POST no arrayGlobal $_POST[] no campo "email";
+	$user = User::getForgot($_POST["email"]);
+	header("Location: /admin/forgot/sent");
+
+});
+
+
+$app->get("/admin/forgot/sent", function(){
+    $page = new PageAdmin([
+        "header"=>false,
+        "footer"=>false
+    ]);
+    $page->setTpl("forgot-sent");
 
 });
 

@@ -5,8 +5,9 @@ use \Hcode\DB\Sql;
 use \Hcode\Model;
 
 class User extends Model{
-
-	const SESSION = "User";
+	//A classe User é um model
+	const SESSION = "User";//constante para no vetor global $_SESSION temos a posicao "User" => dadosDoUSer carregados
+	const SECRET = "HcodePhp7_Secret";//chava para criptografia
 
 	public static function login($login, $password)
 	{
@@ -15,8 +16,9 @@ class User extends Model{
 			":LOGIN"=>$login
 		));
 
-		if(count($results) === 0)
-		{ //nao encontrou nada, pois nada foi retornado do banco de dados
+		if(count($results) === 0)//nao encontrou nada(nenhuma linha), pois nada foi retornado do banco de dados
+		{ 
+			return false;////////////
 			throw new \Exception("Usuario inexistente ou senha inválida.");//coloco a contra barra pois a Exception está no nameSpace principal do PHP e nao dentro do namespace Hcode\Model;					
 		}//pelo menos um resultado temos. Agora verificamos a senha
 
@@ -28,14 +30,16 @@ class User extends Model{
 
 		if(password_verify($password, $data["despassword"]) === true)
 		{
-			$user = new User(); //criamos uma propria instancia da classe
-			/*A ideia agora é apos fazer a consulta, para cada campo retornado vamos criar um atributo com o valor de cada informacao */
+			$user = new User(); //criamos uma propria instancia da classe, ou seja, criamos um usuário.
+			/*A ideia agora é após fazer a consulta, para cada campo retornado vamos criar um atributo com o valor de cada informacao. Isso será feito atraves
+			do método setData(arrayDosDados) na classe Model, que cria os atributos e os getters e setters dinamicamente.
+			 */
 
 			$user->setData($data);//chama na classe MOdel e seta os dados.Pois $data vem de uma busca no BD e retorna uma linha 
 
-			$_SESSION[User::SESSION] = $user->getValues();//o campo "User" na variavel global $_SESSION possui todas informacoes de acordo com a busca
+			$_SESSION[User::SESSION] = $user->getValues();//o campo "User" na variavel global $_SESSION possui todas informacoes de acordo com a busca. Todos os dados ja foram setados DINAMICAMENTE pelo fato de termos o metodo setData com o metodo magico __Call()
 
-			return $user; //retorno o Usuario
+			return $user; //retorno o objeto Usuário criado.
 			
 		} else {
 			throw new \Exception("Usuario inexistente ou senha inválida.");
@@ -47,15 +51,15 @@ class User extends Model{
 	public static function verifyLogin($inadmin = true)
 	{//se a pessoa nao estiver logoda, ela será redirecionada para a pagina de login
 		if(
-			!isset($_SESSION[User::SESSION])
+			!isset($_SESSION[User::SESSION])//se nao está setado o usuario na variavel global $_SESSION
 			||
-			!$_SESSION[User::SESSION]
+			!$_SESSION[User::SESSION]//OU NAO EXISTE A POSICAO "User" NO VETOR GLOBAL $_SESSION
 			||
-			!(int)$_SESSION[User::SESSION]["iduser"] > 0
+			!(int)$_SESSION[User::SESSION]["iduser"] > 0 //ID NAO É MAIOR QUE ZERO, OU SEJA, negativo
 			||
-			(bool)$_SESSION[User::SESSION]["inadmin"] !== $inadmin
+			(bool)$_SESSION[User::SESSION]["inadmin"] !== $inadmin //se o admin está como usuarios??????
 		){
-			header("Location: /admin/login");
+			header("Location: /admin/login");//se cair em alguma situacao dessa, a pessoa nao está logada e ela é redirecionada para a pagina de login.
 			exit;
 		}
 	}
@@ -70,7 +74,7 @@ class User extends Model{
 	public static function listAll()
 	{
 		$sql = new Sql();
-		return $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) ORDER BY b.desperson");//la no index, pegamos esta lista de usuarios
+		return $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) ORDER BY b.desperson");//la no index, pegamos esta lista de usuarios para listar quando clicamos em "Usuarios" na parte administrativa.
 	}
 
 
@@ -99,7 +103,7 @@ class User extends Model{
 	 	));
 	 	//todos os getters foram gerado DINAMICAMENTE pelos get la no model
 
-	 	$this->setData($results[0]);//o resultado é uma linha
+	 	$this->setData($results[0]);//o resultado é uma linha, e apos inserir os dados no banco, insere no objeto criado
 	 }
 
 	 public function get($iduser)
@@ -154,6 +158,54 @@ class User extends Model{
 		));
 	}
 
+	public static function getForgot($email)
+	{
+		$sql = new Sql();
+		$results = $sql->select("
+			SELECT *
+			FROM tb_persons a
+			INNER JOIN tb_users b USING(idperson) 
+			WHERE a.desemail = :email;", 
+			array(
+				":email"=>$email
+			)
+		);
+		if(count($results) === 0)//se nada foi encontrado,ou seja nao retornou nenhuma linha do banco de dados
+		{
+			throw new \Exception("Não foi possivel encontrar a senha.");	
+		}
+		else//caso foi encontrado no BD alguma linha com o email inserido vamos para recuperacao de senha
+		{
+			$data = $results[0];//$data esta com o valor da linha de retorno do banco de dados, e $data recebe a posicao 0(unica posicao).
+			$results2 = $sql->select("CALL sp_userspasswordsrecoveries_create(:iduser, :desip)", array(
+				":iduser"=>$data["iduser"],
+				":desip"=>$_SERVER["REMOTE_ADDR"]
+			));
+			
 
+			if(count($results2) === 0)
+			{//retorno da procedure.
+				throw new \Exception("Não foi possível recuperar a senha.");
+			}
+			else
+			{
+				$dataRecovery = $results2[0];
+				//A procedure vai retornar o idrecovery que foi a chave primaria, autoincrement... que foi gerada de um banco de dados
+				//Agora vamos encriptar esse numero, vamos encriptar ele para o usuario nao conseguir ver que numero que é ou alterar e mandar como um link para o email
+
+				$code = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, User::SECRET, $dataRecovery["idrecovery"], MCRYPT_MODE_ECB));//temos nosso codigo criptografado que será enviado com o link criptografado
+
+				$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$code";
+
+				//esse array passado por ultimo sao os dados para o template que é passado para o forgot.html . Temos a variavel $name e $link no forgot.html
+				$mailer = new Mailer($data["desemail"], $data["desperson"], "Redefinir Senha da Hcode Store", "forgot", array(
+					"name"=>$data["desperson"],
+					"link"=>$link
+				));
+				$mailer->send();
+				return $data;
+			}
+		}
+	}
 }
  ?>

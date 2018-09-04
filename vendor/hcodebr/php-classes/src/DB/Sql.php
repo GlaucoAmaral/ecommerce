@@ -29,6 +29,8 @@ class Sql {
 	{
 
 		foreach ($parameters as $key => $value) {
+			//Exemplo
+			//:deslogin => deslogin
 			
 			$this->bindParam($statement, $key, $value);
 
