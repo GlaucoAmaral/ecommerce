@@ -42,6 +42,8 @@ class Page {
 		if ($this->options['header'] === true) $this->tpl->draw("header");//se a pagina nao precisar carregar o footer e nem o header, nao carrega.
 	}
 
+
+
 	public function setTpl($nomeTemplate, $data = array(), $returnHTML = false)
 	{
 

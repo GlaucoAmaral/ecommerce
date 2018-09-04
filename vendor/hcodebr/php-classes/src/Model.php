@@ -19,10 +19,10 @@ class Model{
 		switch ($method)
 		{
 			case "get":
-				return $this->values[$fieldName];
+				return $this->values[$fieldName];//ele retorna o campo no vetor privado values.Todos os dados já foram setado no setData
 			break;
 			case "set":
-				$this->values[$fieldName] = $args[0];
+				$this->values[$fieldName] = $args[0];//cria-se um novo campo no vetor values com os dados. 
 			break;
 		}
 	}
@@ -31,12 +31,13 @@ class Model{
 	{
 		foreach ($data as $key => $value) {
 			$this->{"set". $key}($value);//quando criamos coisas dinamica colocamos entre as chaves. o {"set" . $key} é o nome do metodo e ($value) são os parametros
-			//aqui a propria model chama os metodos dela mesmo com o $this, e após isso ela chama a funcao call
+			//aqui a propria model chama os metodos dela mesmo com o $this, e após isso ela chama a funcao call passando o "set" como o $name da funcao e $args o argumento para setar
+
 		}
 	}
 
 	public function getValues(){
-		$this->values;
+		return $this->values;
 	}
 
 

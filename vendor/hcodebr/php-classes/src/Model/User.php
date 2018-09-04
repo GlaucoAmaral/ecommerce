@@ -31,12 +31,11 @@ class User extends Model{
 			$user = new User(); //criamos uma propria instancia da classe
 			/*A ideia agora é apos fazer a consulta, para cada campo retornado vamos criar um atributo com o valor de cada informacao */
 
-			$user->setData($data);//chama na classe MOdel
+			$user->setData($data);//chama na classe MOdel e seta os dados.Pois $data vem de uma busca no BD e retorna uma linha 
 
-			$_SESSION[User::SESSION] = $user->getValues();
+			$_SESSION[User::SESSION] = $user->getValues();//o campo "User" na variavel global $_SESSION possui todas informacoes de acordo com a busca
 
-			//var_dump($user);
-			return $user;
+			return $user; //retorno o Usuario
 			
 		} else {
 			throw new \Exception("Usuario inexistente ou senha inválida.");
@@ -46,7 +45,7 @@ class User extends Model{
 	}
 
 	public static function verifyLogin($inadmin = true)
-	{
+	{//se a pessoa nao estiver logoda, ela será redirecionada para a pagina de login
 		if(
 			!isset($_SESSION[User::SESSION])
 			||
@@ -62,15 +61,99 @@ class User extends Model{
 	}
 
 
-
-
 	public static function logout()
 	{
-		$_SESSION[User::SESSION] = NULL;//excluindo a session atual
+		$_SESSION[User::SESSION] = NULL;//excluindo a session atual. A posição user no array global será excluida, que antes carregava os dados do usuario na sessao atual.
 	}
 
+
+	public static function listAll()
+	{
+		$sql = new Sql();
+		return $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) ORDER BY b.desperson");//la no index, pegamos esta lista de usuarios
+	}
+
+
+
+
+	 public function save()//funcao para salvar no banco de dados
+	 {
+	 	$sql = new Sql();
+	 	/*
+	 	o 'p' antes é só para indicar que é um atributo da procedure, mas no bd esta sem o 'p'.
+		pdesperson VARCHAR(64), 
+		pdeslogin VARCHAR(64), 
+		pdespassword VARCHAR(256), 
+		pdesemail VARCHAR(128), 
+		pnrphone BIGINT, 
+		pinadmin TINYINT
+	 	*/
+	 	/*E agora chamamos a procedure que faz tudo. Insere nas duas tabelas os dados*/
+	 	$results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
+	 		":desperson"=>$this->getdesperson(),
+	 		":deslogin"=>$this->getdeslogin(),
+	 		":despassword"=>$this->getdespassword(),
+	 		":desemail"=>$this->getdesemail(),
+	 		":nrphone"=>$this->getnrphone(),
+	 		":inadmin"=>$this->getinadmin()
+	 	));
+	 	//todos os getters foram gerado DINAMICAMENTE pelos get la no model
+
+	 	$this->setData($results[0]);//o resultado é uma linha
+	 }
+
+	 public function get($iduser)
+	{
+	 
+	 $sql = new Sql();
+	 
+	 $results = $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) WHERE a.iduser = :iduser", array(
+	 ":iduser"=>$iduser
+	 ));
+	 
+	 $data = $results[0];//como é uma pessoa de acordo com o id, ele retorna uma linha somente. e depois seta a data no usuarios para pegarmos la no index.php
+	 
+	 $this->setData($data);
+	 
+	 }
+
+
+	 public function update()
+	 {
+	 	$sql = new Sql();
+	 	/*
+	 	o 'p' antes é só para indicar que é um atributo da procedure, mas no bd esta sem o 'p'.
+		pdesperson VARCHAR(64), 
+		pdeslogin VARCHAR(64), 
+		pdespassword VARCHAR(256), 
+		pdesemail VARCHAR(128), 
+		pnrphone BIGINT, 
+		pinadmin TINYINT
+	 	*/
+	 	/*E agora chamamos a procedure que faz tudo. Insere nas duas tabelas os dados*/
+	 	$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
+	 		":iduser" => $this->getiduser(),
+	 		":desperson"=>$this->getdesperson(),
+	 		":deslogin"=>$this->getdeslogin(),
+	 		":despassword"=>$this->getdespassword(),
+	 		":desemail"=>$this->getdesemail(),
+	 		":nrphone"=>$this->getnrphone(),
+	 		":inadmin"=>$this->getinadmin()
+	 	));
+	 	//todos os getters foram gerado DINAMICAMENTE pelos get la no model
+
+	 	$this->setData($results[0]);//o resultado é uma linha
+	 }
+
+	public function delete()
+	{
+		$sql = new Sql();
+
+		$sql->query("CALL sp_users_delete(:iduser)", array(
+			":iduser"=>$this->getiduser()
+		));
+	}
+
+
 }
-
-
-
  ?>
