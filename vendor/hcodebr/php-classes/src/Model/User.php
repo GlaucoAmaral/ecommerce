@@ -159,7 +159,7 @@ class User extends Model{
 		));
 	}
 
-	public static function getForgot($email)
+	public static function getForgot($email, $inadmin = true)
 	{
 		$sql = new Sql();
 		$results = $sql->select("
@@ -194,9 +194,21 @@ class User extends Model{
 				//A procedure vai retornar o idrecovery que foi a chave primaria, autoincrement... que foi gerada de um banco de dados
 				//Agora vamos encriptar esse numero, vamos encriptar ele para o usuario nao conseguir ver que numero que é ou alterar e mandar como um link para o email
 
-				$code = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, User::SECRET, $dataRecovery["idrecovery"], MCRYPT_MODE_ECB));//temos nosso codigo criptografado que será enviado com o link criptografado
+				//$code = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, User::SECRET, $dataRecovery["idrecovery"], MCRYPT_MODE_ECB));//temos nosso codigo criptografado que será enviado com o link criptografado
 
-				$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$code";
+				$dataRecovery = $results2[0];
+	            $iv = random_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+	            $code = openssl_encrypt($dataRecovery['idrecovery'], 'aes-256-cbc', User::SECRET, 0, $iv);
+	            $result = base64_encode($iv.$code);
+
+	             if ($inadmin === true)
+	             {
+                 $link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$result";
+	             }
+	             else
+	             {
+	                $link = "http://www.hcodecommerce.com.br/forgot/reset?code=$result";
+	             } 
 
 				//esse array passado por ultimo sao os dados para o template que é passado para o forgot.html . Temos a variavel $name e $link no forgot.html
 				$mailer = new Mailer($data["desemail"], $data["desperson"], "Redefinir Senha da Hcode Store", "forgot", array(
@@ -204,9 +216,64 @@ class User extends Model{
 					"link"=>$link
 				));
 				$mailer->send();
-				return $data;
+				return $link;
 			}
 		}
 	}
+
+	public static function validForgotDecrypt($result)
+	{
+		//$result é o codigo encriptografado
+
+		$result = base64_decode($result);
+	    $code = mb_substr($result, openssl_cipher_iv_length('aes-256-cbc'), null, '8bit');
+	    $iv = mb_substr($result, 0, openssl_cipher_iv_length('aes-256-cbc'), '8bit');;
+	    $idrecovery = openssl_decrypt($code, 'aes-256-cbc', User::SECRET, 0, $iv);
+	    //agora com o id temos que ir no bd fazer a verificacao e ver se ele é valido ou nao com a regra de uma hora.
+		$sql = new Sql();
+		$results = $sql->select("
+			SELECT *
+			FROM tb_userspasswordsrecoveries a
+			INNER JOIN tb_users b USING(iduser)
+			INNER JOIN tb_persons c USING(idperson)
+			WHERE
+				a.idrecovery = :idrecovery
+			    AND
+			    a.dtrecovery IS NULL
+			    AND
+			    DATE_ADD(a.dtregister, INTERVAL 1 HOUR) >= NOW();", array(
+			    	":idrecovery"=>$idrecovery//aqui o erro
+			    ));
+
+		if(count($results) === 0)
+		{
+			var_dump($idrecovery);
+			throw new \Exception("Não foi possivel recuperar a senha.");
+			
+		}
+		else
+		{
+			return $results[0];//retorno meu usuario para o index.php
+		}
+	}
+
+	public static function setForgotUsed($idrecovery)
+	{
+
+		$sql = new Sql();
+		$sql->query("UPDATE tb_userspasswordsrecoveries SET dtrecovery = NOW() WHERE :idrecovery", array(
+			":idrecovery"=>$idrecovery
+		));//atualizo no banco na tabela tb_userspasswordsrecoveries na coluna dtrecovery a hora que foi feita a mudanca de senha
+	}
+
+	public function setPassword($password)
+	{
+		$sql = new Sql();
+		$sql->query("UPDATE tb_users SET despassword = :password WHERE iduser = :iduser", array(
+			":password" => $password,
+			":iduser"=>$this->getiduser()
+		));
+	}
+
 }
  ?>

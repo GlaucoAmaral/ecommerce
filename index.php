@@ -210,6 +210,50 @@ $app->get("/admin/forgot/sent", function(){
 });
 
 
+$app->get("/admin/forgot/reset", function(){
+	//Antes vamos validar a quem pertence este codigo criptografado
+
+	$user = User::validForgotDecrypt($_GET["code"]);//na user ele retorna a linha com os dados do usuario
+
+	$page = new PageAdmin([
+        "header"=>false,
+        "footer"=>false
+    ]);
+    $page->setTpl("forgot-reset", array(
+    	"name"=>$user["desperson"],
+    	"code"=>$_GET["code"] //passo o code pq vou precisar validar de novo a proxima pagina apos inserir nova senha
+
+    ));
+
+});
+
+
+$app->post("/admin/forgot/reset", function(){
+
+	$forgot = User::validForgotDecrypt($_POST["code"]);//na user ele retorna a linha com os dados do usuario, caso o codigo encriptado seja valido. Recuperamos via post
+
+	//metodos para dar um update no banco dizendo que aquela coluna. Metodo para falar no banco que essa recuperacao ja foi feita mesmo estando no prazo de uma hora
+	User::setForgotUsed($forgot["idrecovery"]);
+
+
+	$user = new User();
+	$user->get((int)$forgot["iduser"]);//recuperando o objeto
+
+
+    $password = password_hash($_POST["password"], PASSWORD_DEFAULT, ["cost"=>12]);
+
+	$user->setPassword($password);#utilizamos esta nova funcao pois precisamos informar a hash da senha. Sabemos o id do usuario pelo codigo encriptado quando eh acessado pelo link de renovacao da senha. Nas consultas do banco tem a coluna iduser e com ela sabemos quem esta recuperando a senha.
+
+
+	$page = new PageAdmin([
+        "header"=>false,
+        "footer"=>false
+    ]);
+    $page->setTpl("forgot-reset-success"); //Nao passo nenhum parametro pois na pagina nao utilizamos nenhuma variavel.
+});
+
+
+
 $app->run();//roda tudo
 
  ?>
