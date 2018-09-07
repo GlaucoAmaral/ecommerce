@@ -47,7 +47,7 @@ class Page {
 	public function setTpl($nomeTemplate, $data = array(), $returnHTML = false)
 	{
 
-		$this->setData($data);
+		$this->setData($data);//este setData é para setar os dados com a pagina, ou seja, para dar pra acessar as variaveis no html
 
 		return $this->tpl->draw($nomeTemplate, $returnHTML);
 

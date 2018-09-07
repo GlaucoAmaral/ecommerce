@@ -19,7 +19,7 @@ class Model{
 		switch ($method)
 		{
 			case "get":
-				return $this->values[$fieldName];//ele retorna o campo no vetor privado values.Todos os dados já foram setado no setData
+				return (isset($this->values[$fieldName]))?$this->values[$fieldName]:NULL;//ele retorna o campo no vetor privado values.Todos os dados já foram setado no setData
 			break;
 			case "set":
 				$this->values[$fieldName] = $args[0];//cria-se um novo campo no vetor values com os dados. 

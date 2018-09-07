@@ -66,10 +66,14 @@ class User extends Model{
 	}
 
 
+
+
 	public static function logout()
 	{
 		$_SESSION[User::SESSION] = NULL;//excluindo a session atual. A posição user no array global será excluida, que antes carregava os dados do usuario na sessao atual.
 	}
+
+
 
 
 	public static function listAll()
@@ -77,6 +81,8 @@ class User extends Model{
 		$sql = new Sql();
 		return $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) ORDER BY b.desperson");//la no index, pegamos esta lista de usuarios para listar quando clicamos em "Usuarios" na parte administrativa.
 	}
+
+
 
 
 
@@ -102,13 +108,17 @@ class User extends Model{
 	 		":nrphone"=>$this->getnrphone(),
 	 		":inadmin"=>$this->getinadmin()
 	 	));
-	 	//todos os getters foram gerado DINAMICAMENTE pelos get la no model
+	 	//todos os getters foram gerado DINAMICAMENTE pelos get la DO MODEL
 
-	 	$this->setData($results[0]);//o resultado é uma linha, e apos inserir os dados no banco, insere no objeto criado
+	 	$this->setData($results[0]);//o resultado é uma linha, e apos inserir os dados no banco, insere no objeto criado. Este metodo setData é vindo da classe Model
 	 }
 
+
+
+
+
 	 public function get($iduser)
-	{
+	 {
 	 
 	 $sql = new Sql();
 	 
@@ -121,6 +131,10 @@ class User extends Model{
 	 $this->setData($data);
 	 
 	 }
+
+
+
+
 
 
 	 public function update()
@@ -150,6 +164,10 @@ class User extends Model{
 	 	$this->setData($results[0]);//o resultado é uma linha
 	 }
 
+
+
+
+
 	public function delete()
 	{
 		$sql = new Sql();
@@ -159,7 +177,12 @@ class User extends Model{
 		));
 	}
 
-	public static function getForgot($email, $inadmin = true)
+
+
+
+
+
+	public static function getForgot($email)
 	{
 		$sql = new Sql();
 		$results = $sql->select("
@@ -178,10 +201,14 @@ class User extends Model{
 		else//caso foi encontrado no BD alguma linha com o email inserido vamos para recuperacao de senha
 		{
 			$data = $results[0];//$data esta com o valor da linha de retorno do banco de dados, e $data recebe a posicao 0(unica posicao).
+			//data é um array de uma posicao contendo idperson, desperson, desemail, nrphone, dtregister, iduser, deslogin, despassword(criptografada), inadmin e dtregister
+
 			$results2 = $sql->select("CALL sp_userspasswordsrecoveries_create(:iduser, :desip)", array(
 				":iduser"=>$data["iduser"],
 				":desip"=>$_SERVER["REMOTE_ADDR"]
 			));
+			//insere o id e ip numa tabela e retorna esta insercao para $results2
+
 			
 
 			if(count($results2) === 0)
@@ -191,45 +218,52 @@ class User extends Model{
 			else
 			{
 				$dataRecovery = $results2[0];
+				//retorna a linha com IDRECOVERY, IDUSER, DESIP,DTRECOVERY, DTREGISTER
 				//A procedure vai retornar o idrecovery que foi a chave primaria, autoincrement... que foi gerada de um banco de dados
-				//Agora vamos encriptar esse numero, vamos encriptar ele para o usuario nao conseguir ver que numero que é ou alterar e mandar como um link para o email
-
-				//$code = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_128, User::SECRET, $dataRecovery["idrecovery"], MCRYPT_MODE_ECB));//temos nosso codigo criptografado que será enviado com o link criptografado
-
-				$dataRecovery = $results2[0];
+				//Agora vamos encriptar esse IDRECOVERY, vamos encriptar ele para o usuario nao conseguir ver que numero que é ou alterar e mandar como um link para o email
+				//temos nosso codigo criptografado que será enviado com o link criptografado
+				/*INICIO ENCRIPTOGRAFIA*/
+				//PEGAMOS O ID na posicao "idrecovery" que esta no results2
 	            $iv = random_bytes(openssl_cipher_iv_length('aes-256-cbc'));
 	            $code = openssl_encrypt($dataRecovery['idrecovery'], 'aes-256-cbc', User::SECRET, 0, $iv);
 	            $result = base64_encode($iv.$code);
+				/*FIM ENCRIPTOGRAFIA*/
 
-	             if ($inadmin === true)
-	             {
-                 $link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$result";
-	             }
-	             else
-	             {
-	                $link = "http://www.hcodecommerce.com.br/forgot/reset?code=$result";
-	             } 
+                $link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$result";
+	            
 
 				//esse array passado por ultimo sao os dados para o template que é passado para o forgot.html . Temos a variavel $name e $link no forgot.html
+				//essas variaveis vao no esboco do email. $name para aparecer "Olá Glauco" e link para colocar o link encriptografado
 				$mailer = new Mailer($data["desemail"], $data["desperson"], "Redefinir Senha da Hcode Store", "forgot", array(
 					"name"=>$data["desperson"],
 					"link"=>$link
 				));
 				$mailer->send();
-				return $link;
+				return $data;
 			}
 		}
 	}
 
+
+
+
+
+
+
 	public static function validForgotDecrypt($result)
 	{
 		//$result é o codigo encriptografado
-
+		//INICIO DESCRIPTOGRAFIA
 		$result = base64_decode($result);
 	    $code = mb_substr($result, openssl_cipher_iv_length('aes-256-cbc'), null, '8bit');
 	    $iv = mb_substr($result, 0, openssl_cipher_iv_length('aes-256-cbc'), '8bit');;
 	    $idrecovery = openssl_decrypt($code, 'aes-256-cbc', User::SECRET, 0, $iv);
-	    //agora com o id temos que ir no bd fazer a verificacao e ver se ele é valido ou nao com a regra de uma hora.
+	    //FIM DESCRIPTOGRAFIA
+
+
+
+
+	    //agora com o id temos que ir no bd fazer a verificacao e ver se ele é valido ou nao com a regra de uma hora. Pois os links de redefinir senha tem uma hora de vida
 		$sql = new Sql();
 		$results = $sql->select("
 			SELECT *
@@ -242,20 +276,22 @@ class User extends Model{
 			    a.dtrecovery IS NULL
 			    AND
 			    DATE_ADD(a.dtregister, INTERVAL 1 HOUR) >= NOW();", array(
-			    	":idrecovery"=>$idrecovery//aqui o erro
+			    	":idrecovery"=>$idrecovery
 			    ));
 
 		if(count($results) === 0)
 		{
-			var_dump($idrecovery);
 			throw new \Exception("Não foi possivel recuperar a senha.");
-			
 		}
 		else
 		{
 			return $results[0];//retorno meu usuario para o index.php
 		}
 	}
+
+
+
+
 
 	public static function setForgotUsed($idrecovery)
 	{
@@ -265,6 +301,8 @@ class User extends Model{
 			":idrecovery"=>$idrecovery
 		));//atualizo no banco na tabela tb_userspasswordsrecoveries na coluna dtrecovery a hora que foi feita a mudanca de senha
 	}
+
+
 
 	public function setPassword($password)
 	{
