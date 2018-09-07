@@ -55,7 +55,7 @@ class Category extends Model{
 
 	public static function updateFile()
 	{
-		//metodo para atualizar as categorias do site que ficam no footer
+		//metodo para atualizar as categorias do site que ficam no footer LA EMBAIXO
 		$categories = Category::listAll();//essa categories será um array com todas as linhas de categorias e as colunas
 		//idcategory, descategory, dtresgister
 

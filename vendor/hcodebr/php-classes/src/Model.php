@@ -2,7 +2,6 @@
 
 namespace Hcode;
 
-
 /*Ela classe MOdel fará todos getter e setter para todas as outras de acordo com seus respectivos atributos*/
 class Model{
 
@@ -39,8 +38,6 @@ class Model{
 	public function getValues(){
 		return $this->values;
 	}
-
-
 
 }
 
