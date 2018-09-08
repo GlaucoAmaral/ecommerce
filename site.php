@@ -3,6 +3,7 @@
 
 use \Hcode\Page;
 use \Hcode\Model\Product;
+use \Hcode\Model\Category;
 
 
 $app->get('/', function() {//criacao da Rota da home do site
@@ -24,6 +25,24 @@ $app->get('/', function() {//criacao da Rota da home do site
 	echo json_encode($results);
 	//Hcode é o nosso vendor principal
 	*/
+});
+
+
+$app->get("/categories/:idcategory", function($idcategory){
+    //aqui esta a parte de mexermos na categoria em relacao ao visual para os clientes do ecommerce
+
+    $category = new Category();
+
+    $category->get((int)$idcategory);//seto os dados no objeto category
+
+    $page = new Page();
+
+    //Toda vez que eu clicar em alguma categoria, ele carregará o TEMPLATE padrao para a categoria mas sempre com o nome diferente, pois cada categoria eu passo um id diferente no endereco da URL
+    //cada posicao do array passado é uma variavel para ser passada na pagina html
+    $page->setTpl("category", array(
+        'category'=>$category->getValues(),
+        'products'=>Product::checklist($category->getProducts(true))//passamos o checklist para ele colocar junto o desphoto
+    ));
 });
 
 

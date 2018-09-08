@@ -5,6 +5,7 @@ use \Hcode\DB\Sql;
 use \Hcode\Model;
 use \Hcode\Mailer;
 
+
 class Category extends Model{
 
 	public static function listAll()
@@ -70,6 +71,58 @@ class Category extends Model{
 		//Apos ter adicionado todas categorias no array, colocamos o conteudo do array nesse arquivo categories-menu.html transformando o array em string pela funcao implode. A funcao explode tranforma string em array.
 		//Quando ocorrer uma DELECAO e um SAVE apos editar ou criar, ele atualiza o arquivo dinamicamente
 		file_put_contents($_SERVER['DOCUMENT_ROOT'] . DIRECTORY_SEPARATOR . "views" . DIRECTORY_SEPARATOR . "categories-menu.html", implode('', $html));
+	}
+
+	public function getProducts($related = true)
+	{
+		//passamos um booleano para a funcao. se for true são os produtos relacionados a esta categoria e caso contrario os produtos nao relacionados a esta categoria
+		$sql = new Sql();
+		if($related === true)
+		{
+			return $sql->select("
+				SELECT * FROM tb_products WHERE idproduct IN(
+					SELECT a.idproduct
+					FROM tb_products a
+					INNER JOIN tb_productscategories b ON a.idproduct = b.idproduct
+					WHERE b.idcategory = :idcategory
+					);", array(
+						':idcategory'=>$this->getidcategory()
+
+					));
+
+		}
+		else
+		{
+			return $sql->select("
+				SELECT * FROM tb_products WHERE idproduct NOT IN(
+					SELECT a.idproduct
+					FROM tb_products a
+					INNER JOIN tb_productscategories b ON a.idproduct = b.idproduct
+					WHERE b.idcategory = :idcategory
+				);", array(
+					':idcategory'=>$this->getidcategory()
+				));
+
+		}
+	}
+
+	public function addProduct(Product $product)
+	{
+		$sql = new Sql();
+		$sql->query("INSERT INTO tb_productscategories VALUES(:idcategory, :idproduct)", array(
+			":idcategory"=>$this->getidcategory(),
+			":idproduct"=>$product->getidproduct()
+		));
+	}
+
+
+	public function removeProduct(Product $product)
+	{
+		$sql = new Sql();
+		$sql->query("DELETE FROM tb_productscategories WHERE idcategory = :idcategory AND idproduct = :idproduct", array(
+			":idcategory"=>$this->getidcategory(),
+			":idproduct"=>$product->getidproduct()
+		));
 
 	}
 

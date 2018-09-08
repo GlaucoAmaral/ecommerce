@@ -18,11 +18,6 @@ require_once("admin-categories.php");
 require_once("admin-products.php");
 //Quando estou fazendo os require, é a mesma coisa que se eu estisse copiando todos os códigos dos outros arquivos e colando para cá
 
-
-$app->get();
-
-
-
 $app->run();//roda tudo
 
 ?>
