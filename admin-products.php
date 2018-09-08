@@ -55,6 +55,7 @@ $app->get("/admin/products/:idproduct", function($idproduct){
 
 	$page->setTpl("products-update", array(
 		"product"=>$product->getValues()
+		//no getValues vem junto a imagem para ser carregada no edit
 	));
 
 });
@@ -70,9 +71,9 @@ $app->post("/admin/products/:idproduct", function($idproduct){
 
 	$product->setData($_POST);//seto os novos dados no produto
 
-	$product->save();
+	$product->save();//salva todos os dados menos a foto
 
-	//Agora o upload do arquivo
+	//Agora o upload do arquivp/foto
 
 	$product->setPhoto($_FILES["file"]);
 
