@@ -106,6 +106,41 @@ class Category extends Model{
 		}
 	}
 
+	public function getProductsPage($page = 1, $itemsPerPage = 8)
+	{
+		//o primeiro paramentro passado é a pagina que estamos e o segundo parametro é a quantidade de itens que serão mostrados por pagina
+		
+		$start = ($page-1)*$itemsPerPage;
+
+		$sql = new Sql();
+
+
+		$results =  $sql->select("
+			SELECT SQL_CALC_FOUND_ROWS *
+			FROM tb_products a
+			INNER JOIN tb_productscategories b ON a.idproduct = b.idproduct
+			INNER JOIN tb_categories c ON c.idcategory = b.idcategory
+			WHERE c.idcategory = :idcategory
+			LIMIT $start, $itemsPerPage;", array(
+				":idcategory"=>$this->getidcategory()
+			));//resultado dos produtos
+
+		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");//resultado do total
+		
+
+
+
+		return array(
+			'data'=>Product::checkList($results),//Com o checkList eu pego todas informacoes do banco e tambem seto a variavel desphoto que na pagina html pede
+			'total' =>(int)$resultTotal[0]["nrtotal"],//total de produtos
+			'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)//funcao que converte arredondando para cima. se tenho 7 items e irei dividir por 3, dará duas paginas com 3 e uma com 1
+		);
+		//Como o resultTotal retorna uma linha da consulta com apenas a coluna "nrtotal", entao pego a linha zero e depois a coluna "nrtotal"
+
+	}
+
+
+
 	public function addProduct(Product $product)
 	{
 		$sql = new Sql();
@@ -125,6 +160,9 @@ class Category extends Model{
 		));
 
 	}
+
+
+
 
 
 

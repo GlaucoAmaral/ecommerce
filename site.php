@@ -31,9 +31,23 @@ $app->get('/', function() {//criacao da Rota da home do site
 $app->get("/categories/:idcategory", function($idcategory){
     //aqui esta a parte de mexermos na categoria em relacao ao visual para os clientes do ecommerce
 
+    $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;//numero da pagina
+
     $category = new Category();
 
     $category->get((int)$idcategory);//seto os dados no objeto category
+
+    $pagination = $category->getProductsPage($page);//a funcao getProductsPage() retorna um array com 3 campos: 'data'(todosprodutos com desphoto, 'total'(quantidade de produtos), 'pages'(total de paginas).
+
+    $pages = [];
+
+
+    for ($i=1; $i <= $pagination['pages']; $i++){ 
+        array_push($pages, [
+            'link'=>'/categories/'.$category->getidcategory().'?page='.$i,
+            'page'=>$i
+        ]);
+    }
 
     $page = new Page();
 
@@ -41,7 +55,8 @@ $app->get("/categories/:idcategory", function($idcategory){
     //cada posicao do array passado é uma variavel para ser passada na pagina html
     $page->setTpl("category", array(
         'category'=>$category->getValues(),
-        'products'=>Product::checklist($category->getProducts(true))//passamos o checklist para ele colocar junto o desphoto
+        'products'=>$pagination["data"],
+        'pages'=>$pages
     ));
 });
 
