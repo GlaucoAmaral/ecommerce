@@ -13,6 +13,8 @@ class User extends Model{
 
 	public static function getFromSession()
 	{
+		//Essa funcao tenta recuperar um user atraves da variável session no campo User::SESSION que é igual a "User"
+		//se o usuario estiver na variavel session, é possivel recuperá-lo, setá-lo e retornar este. Caso contrário retorna um usuario vazio
 		$user = new User();
 		if(isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION]['iduser'] > 0)
 		{
@@ -28,16 +30,17 @@ class User extends Model{
 		if(
 			!isset($_SESSION[User::SESSION])//se a sessao do usuario nao está definida 
 			||
-			!$_SESSION[User::SESSION]//OU está definica mas está vazia
+			!$_SESSION[User::SESSION]//OU está definida mas está vazia
 			||
-			!(int)$_SESSION[User::SESSION]["iduser"] > 0 //OU esta definido mas id não eh maior que zero 
+			!(int)$_SESSION[User::SESSION]["iduser"] > 0 //OU esta definido mas id não eh maior que zero, ou seja, nao tem o tal usuario
 		)
 		{
-			//nao esta logado
+			//NAO ESTA LOGADO
 			return false;
 		}
 		else
-			//se caiu aqui é porque esta LOGADOO
+			//SE CAIU AQUI É PORQUE ESTÁ LOGADOO
+			//primeiro ele poder administrador, depois ele pode ser usuario comum 
 		{
 			//se for uma verificacao na rota de administrador
 			if($inadmin === true && (bool)$_SESSION[User::SESSION]['inadmin'] === true)
@@ -58,7 +61,6 @@ class User extends Model{
 		}
 
 	}
-
 
 
 

@@ -6,7 +6,6 @@ use \Hcode\Model\User;
 $app->get('/admin', function() {//criacao da Rota
         
     User::verifyLogin();//se passar tudo okay, prossegue para criar a pagina de admin, caso contrario na propria funcao lá é jogado para a rota de login
-
     $page = new PageAdmin();
 
     $page->setTpl("index");//carrega o conteudo

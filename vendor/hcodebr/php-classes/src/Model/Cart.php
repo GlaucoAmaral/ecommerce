@@ -24,23 +24,23 @@ class Cart extends Model{
 		}
 		else
 		{
-			//caso ele nao existir ainda. Vamos tentar recupar do bd por ele guarda o id da session
-			$cart->getFromSessionID();
-			if(!(int)$cart->getidcart() > 0)//se ele nao conseguiu criar o carrinho, vamos criar e dps retornar o carrinho
+			//caso ele nao existir ainda. Vamos tentar recupar do bd por ele guardar o id da session
+			$cart->getFromSessionID();//caso exista, ele ja seta no objeto Cart contem idcart, dessessionid...
+			if(!(int)$cart->getidcart() > 0)//se ele nao conseguiu criar o carrinho pela funcao acima, vamos criar e dps retornar o carrinho
 			{
 
-				$data = [
+				$data = [//crio um id para a sessao
 					'dessessionid'=>session_id() 
 				];
-
 				if(User::checkLogin(false) === true)//o padrao é true para uma rota administrativa. Como nao estou na administracao, estou no carrinho de compras, entao é false
 					//se for verdade o checklogin quer dizer que ele está logado e consigo puxar o usuario com o getFromSession e consigo passar ao array data o id do usuario 
 				{
+					//caso a pessoa ja esteja logada de acordo com o User::checkLogin(false)===true
 					$user = User::getFromSession();//metodo que tento carregar o objeto de acordo com a sessao 
 					$data['iduser'] = $user->getiduser();//consigo obter o id user
 				}
 
-				$cart->setData($data);//colocamos os dados no carrinho, setamos.
+				$cart->setData($data);//colocamos os dados no carrinho, setamos. Se ele nao estiver logado nem nada, teremos apenas o idcart e dessession. Caso contrario, teremos esses dois elementos mais o iduser
 				
 				$cart->save();//e salvamos no banco agora
 
@@ -56,8 +56,6 @@ class Cart extends Model{
 	public function setToSession()
 	{
 		$_SESSION[Cart::SESSION] = $this->getValues();//coloquei carrinho na sessao
-
-
 	}
 
 	public function getFromSessionID()
