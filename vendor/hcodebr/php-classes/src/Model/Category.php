@@ -18,6 +18,7 @@ class Category extends Model{
 	public function save()//funcao para salvar no banco de dados
 	{
 	 	$sql = new Sql();
+	 
 	 	//a procedure ja insere no banco de dados e retorna a linha da insercao
 	 	//como o idcategory nao vem no metodo post pois só sabemos ele apos a insercao, modificamos a classe model
 	 	$results = $sql->select("CALL sp_categories_save(:idcategory, :descategory)", array(
@@ -89,7 +90,6 @@ class Category extends Model{
 						':idcategory'=>$this->getidcategory()
 
 					));
-
 		}
 		else
 		{
@@ -106,15 +106,17 @@ class Category extends Model{
 		}
 	}
 
-	public function getProductsPage($page = 1, $itemsPerPage = 8)
+	public function getProductsPage($page = 1, $itemsPerPage = 3)
 	{
 		//o primeiro paramentro passado é a pagina que estamos e o segundo parametro é a quantidade de itens que serão mostrados por pagina
 		
-		$start = ($page-1)*$itemsPerPage;
+		$start = ($page-1)*$itemsPerPage;//essa variavel start é de quanto em quanto comecarei na proxima consulta para exibir os productos
 
 		$sql = new Sql();
 
 
+
+		//primeiro paramatro do limit é a partir de qual registro e o segundo é quantos registros eu quero. a primeira linha sempre é o zero
 		$results =  $sql->select("
 			SELECT SQL_CALC_FOUND_ROWS *
 			FROM tb_products a
@@ -125,14 +127,15 @@ class Category extends Model{
 				":idcategory"=>$this->getidcategory()
 			));//resultado dos produtos
 
-		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");//resultado do total
+		$resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal;");//resultado do TOTAL de linhas encontradas sem o uso de limit
+		//sempre será 5 para sempre que formos para uma proxima pagina de aparelhos, ele printar duas paginas e tudo mais
 		
 
 
 
 		return array(
 			'data'=>Product::checkList($results),//Com o checkList eu pego todas informacoes do banco e tambem seto a variavel desphoto que na pagina html pede
-			'total' =>(int)$resultTotal[0]["nrtotal"],//total de produtos
+			'total' =>(int)$resultTotal[0]["nrtotal"],//total de produtos encontrados de acordo com o limit
 			'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)//funcao que converte arredondando para cima. se tenho 7 items e irei dividir por 3, dará duas paginas com 3 e uma com 1
 		);
 		//Como o resultTotal retorna uma linha da consulta com apenas a coluna "nrtotal", entao pego a linha zero e depois a coluna "nrtotal"

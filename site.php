@@ -62,6 +62,22 @@ $app->get("/categories/:idcategory", function($idcategory){
 
 
 
+$app->get("/products/:desurl", function($desurl){
+    //esse desurl ja vem direto após a gente clicar no produto, pois na view category.html puxamos os dados dos productos de acordo com a categoria
+    $product = new Product();
+
+    $product->getFromURL($desurl);//nessa funcao ja capturamos do banco de dados as informacoes do produto e no final ja setamos ele atravas do $this->setData($results[0]);
+
+    $page = new Page();
+
+    $page->setTpl("product-detail", [
+        'product' => $product->getValues(),//aqui passamos as informações do produto
+        'categories'=>$product->getCategories()//aqui passamos as quais categorias o produto esta relacionado
+    ]);
+});
+
+
+
 
 
 
