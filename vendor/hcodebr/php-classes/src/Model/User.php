@@ -63,9 +63,6 @@ class User extends Model{
 	}
 
 
-
-
-
 	public static function login($login, $password)
 	{
 		$sql = new Sql(); 
@@ -102,12 +99,12 @@ class User extends Model{
 			throw new \Exception("Usuario inexistente ou senha inválida.");
 		}
 
-
 	}
 
 	public static function verifyLogin($inadmin = true)
 	{//se a pessoa nao estiver logoda, ela será redirecionada para a pagina de login
-		if(User::checkLogin($inadmin)){
+		if(!User::checkLogin($inadmin)){
+			//mudei para o !funcao pois se a pessoa esta tudo okay, nao tem pq direcionar para a pagina de login. Ja se ela nao estiver logada, ai teremos que redirecionar ela
 			header("Location: /admin/login");//se cair em alguma situacao dessa, a pessoa nao está logada e ela é redirecionada para a pagina de login.
 			exit;
 		}

@@ -24,11 +24,6 @@ $app->get('/admin/login', function() {//criacao da Rota por GET
 });
 
 
-//$app->get('/teste', function(){
-//   $page = new Teste();
-//});
-
-
 $app->post('/admin/login', function(){ //criacao da rota por POST
     
     User::login($_POST["login"], $_POST["password"]);//este metodo estatico da classe user recebera o login e a senha por metodo post do site

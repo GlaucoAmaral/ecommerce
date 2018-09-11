@@ -87,8 +87,60 @@ $app->get("/cart", function(){
     $page = new Page();
 
     $page->setTpl("cart", [
+        'cart'=>$cart->getValues(),
+        'products'=>$cart->getProducts()
     ]);
 });
+
+
+$app->get("/cart/:idproduct/add", function($idproduct){
+    $product = new Product();//crio uma instancia do novo produto
+
+    $product->get((int) $idproduct);//seto o produto de acordo com o id dele
+
+    $cart = Cart::getFromSession();//pego o carrinho pela sessao ou crio um novo
+
+    $qtd = (isset($_GET['qtd']))?(int)$_GET['qtd']:1;//se vier 4 itens de uma vez é quatro, caso contrario um somente por padrao
+
+    for($i=0; $i<$qtd; $i++)
+    {
+        $cart->addProduct($product);
+    }
+
+    header("Location: /cart");
+    exit;
+});
+
+$app->get("/cart/:idproduct/minus", function($idproduct){//somente quando quero remover um
+    $product = new Product();//crio uma instancia do novo produto
+
+    $product->get((int) $idproduct);//seto o produto de acordo com o id dele
+
+    $cart = Cart::getFromSession();//pego o carrinho pela sessao ou crio um novo
+
+
+    $cart->removeProduct($product);
+
+    header("Location: /cart");
+    exit;
+
+});
+
+
+$app->get("/cart/:idproduct/remove", function($idproduct){//Deletar todos
+    $product = new Product();//crio uma instancia do novo produto
+
+    $product->get((int) $idproduct);//seto o produto de acordo com o id dele
+
+    $cart = Cart::getFromSession();//pego o carrinho pela sessao ou crio um novo
+
+    $cart->removeProduct($product, true);
+
+    header("Location: /cart");
+    exit;
+
+});
+
 
 
 

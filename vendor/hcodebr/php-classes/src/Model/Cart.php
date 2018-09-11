@@ -20,12 +20,13 @@ class Cart extends Model{
 		if(isset($_SESSION[Cart::SESSION]) && (int)$_SESSION[Cart::SESSION]['idcart'] > 0)//se a sessão ja existir, ou seja, foi definida e o id tb > 0
 		{
 			//significa que o meu carrinho ja foi inserido no banco e significa também que ele está na sessão. Entao vamos apenas carregar o carrinho
-			$cart->get((int)$_SESSION[Cart::SESSION]['idcart']);//carregando o carrinho com as informações
+			$cart->get((int)$_SESSION[Cart::SESSION]['idcart']);//carregando o carrinho com as informações pelo id e depois ja retorno la embaixo
 		}
 		else
 		{
 			//caso ele nao existir ainda. Vamos tentar recupar do bd por ele guardar o id da session
-			$cart->getFromSessionID();//caso exista, ele ja seta no objeto Cart contem idcart, dessessionid...
+			$cart->getFromSessionID();//caso exista, ele ja seta no objeto Cart contem idcart, dessessionid... e ja retorna isso la no "return $cart;"
+			
 			if(!(int)$cart->getidcart() > 0)//se ele nao conseguiu criar o carrinho pela funcao acima, vamos criar e dps retornar o carrinho
 			{
 
@@ -69,8 +70,6 @@ class Cart extends Model{
 		{
 			$this->setData($results[0]);
 		}
-		
-
 	}
 
 	public function get(int $idcart)
@@ -88,8 +87,6 @@ class Cart extends Model{
 
 	}
 
-
-
 	public function save()
 	{
 		$sql = new Sql();
@@ -106,7 +103,51 @@ class Cart extends Model{
 
 	}
 
+	//metodo para adicionar produto
+	public function addProduct(Product $product)
+	{
+		$sql = new Sql();
 
+		$sql->query("INSERT INTO tb_cartsproducts (idcart, idproduct) VALUES(:idcart, :idproduct)", array(
+			":idcart"=>$this->getidcart(),
+			":idproduct"=>$product->getidproduct()
+		 ));
+	}
+
+	public function removeProduct(Product $product, $all = false)
+	{
+		$sql = new Sql();
+		if($all)
+		{//aqui remove todos
+			$sql->query("UPDATE tb_cartsproducts SET dtremoved = NOW() WHERE idcart = :idcart AND idproduct = :idproduct AND dtremoved IS NULL", array(
+				":idcart"=>$this->getidcart(),
+				":idproduct"=>$product->getidproduct()
+			));
+		}
+		else//caso eu va remover somente uma unidade
+		{
+			$sql->query("UPDATE tb_cartsproducts SET dtremoved = NOW() WHERE idcart = :idcart AND idproduct = :idproduct AND dtremoved IS NULL LIMIT 1", array(
+				":idcart"=>$this->getidcart(),
+				":idproduct"=>$product->getidproduct()
+			));
+		}
+	}
+
+	public function getProducts()
+	//pegar todos produtos no carrinho
+	{
+		$sql = new Sql();
+		$rows = $sql->select("
+			SELECT b.idproduct, b.desproduct, b.vlprice, b.vlwidth, b.vlheight, b.vllength, b.vlweight, b.desurl, COUNT(*) AS nrqtd, SUM(b.vlprice) AS vltotal
+			FROM tb_cartsproducts a
+			INNER JOIN tb_products b ON a.idproduct = b.idproduct
+			WHERE a.idcart = :idcart AND a.dtremoved IS NULL
+			GROUP BY  b.idproduct, b.desproduct, b.vlprice, b.vlwidth, b.vlheight, b.vllength, b.vlweight, b.desurl
+			ORDER BY b.desproduct;", array(
+				":idcart"=>$this->getidcart()
+			));
+		return Product::checkList($rows);
+	}
 
 
 }
