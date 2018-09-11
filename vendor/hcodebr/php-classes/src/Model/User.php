@@ -10,6 +10,60 @@ class User extends Model{
 	const SESSION = "User";//constante para no vetor global $_SESSION temos a posicao "User" => dadosDoUSer carregados
 	const SECRET = "HcodePhp7_Secret";//chava para criptografia
 
+
+	public static function getFromSession()
+	{
+		$user = new User();
+		if(isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION]['iduser'] > 0)
+		{
+			$user->setData($_SESSION[User::SESSION]);		
+		}
+		//caso o objeto não conseguiu carregar, retorna um objeto vazio...
+		return $user;
+
+	}
+
+	public static function checkLogin($inadmin = true)
+	{
+		if(
+			!isset($_SESSION[User::SESSION])//se a sessao do usuario nao está definida 
+			||
+			!$_SESSION[User::SESSION]//OU está definica mas está vazia
+			||
+			!(int)$_SESSION[User::SESSION]["iduser"] > 0 //OU esta definido mas id não eh maior que zero 
+		)
+		{
+			//nao esta logado
+			return false;
+		}
+		else
+			//se caiu aqui é porque esta LOGADOO
+		{
+			//se for uma verificacao na rota de administrador
+			if($inadmin === true && (bool)$_SESSION[User::SESSION]['inadmin'] === true)
+			{
+				return true;
+			}
+			//caso ele esteja logado e nao seja administrador
+			else if($inadmin === false)
+			{
+				return true; 
+			}
+			//qualquer coisa diferente disso nega tudo 
+			else
+			{
+				return false; 
+			}
+
+		}
+
+	}
+
+
+
+
+
+
 	public static function login($login, $password)
 	{
 		$sql = new Sql(); 
@@ -51,15 +105,7 @@ class User extends Model{
 
 	public static function verifyLogin($inadmin = true)
 	{//se a pessoa nao estiver logoda, ela será redirecionada para a pagina de login
-		if(
-			!isset($_SESSION[User::SESSION])//se nao está setado o usuario na variavel global $_SESSION
-			||
-			!$_SESSION[User::SESSION]//OU NAO EXISTE A POSICAO "User" NO VETOR GLOBAL $_SESSION
-			||
-			!(int)$_SESSION[User::SESSION]["iduser"] > 0 //ID NAO É MAIOR QUE ZERO, OU SEJA, negativo
-			||
-			(bool)$_SESSION[User::SESSION]["inadmin"] !== $inadmin //se o admin está como usuarios??????
-		){
+		if(User::checkLogin($inadmin)){
 			header("Location: /admin/login");//se cair em alguma situacao dessa, a pessoa nao está logada e ela é redirecionada para a pagina de login.
 			exit;
 		}
@@ -131,8 +177,6 @@ class User extends Model{
 	 $this->setData($data);
 	 
 	 }
-
-
 
 
 

@@ -4,6 +4,8 @@
 use \Hcode\Page;
 use \Hcode\Model\Product;
 use \Hcode\Model\Category;
+use \Hcode\Model\Cart;
+
 
 
 $app->get('/', function() {//criacao da Rota da home do site
@@ -78,7 +80,15 @@ $app->get("/products/:desurl", function($desurl){
 
 
 
+$app->get("/cart", function(){
+    
+    $cart = Cart::getFromSession();
 
+    $page = new Page();
+
+    $page->setTpl("cart", [
+    ]);
+});
 
 
 

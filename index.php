@@ -6,7 +6,8 @@ require_once("vendor/autoload.php");//Do composer. Sempre trazer as dependencias
 
 use \Slim\Slim;//Ambos sao namesapces. Dentro do vendor tenho dezenas de classe.
 
-$app = new \Slim\Slim();//
+$app = new \Slim\Slim();//Esse é o namespace do Slim. Isso é necessário pois ele está dentro da pasta vendor/slim/slim
+//Perceba que há duas pastas slim. O namespace segue o mesmo padrão
 
 $app->config('debug', true);
 
