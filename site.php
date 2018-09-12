@@ -88,12 +88,13 @@ $app->get("/cart", function(){
 
     $page->setTpl("cart", [
         'cart'=>$cart->getValues(),
-        'products'=>$cart->getProducts()
+        'products'=>$cart->getProducts(),
+        'error'=>Cart::getMsgError()
     ]);
 });
 
 
-$app->get("/cart/:idproduct/add", function($idproduct){
+$app->get("/cart/:idproduct/add", function($idproduct){ 
     $product = new Product();//crio uma instancia do novo produto
 
     $product->get((int) $idproduct);//seto o produto de acordo com o id dele
@@ -141,6 +142,19 @@ $app->get("/cart/:idproduct/remove", function($idproduct){//Deletar todos
 
 });
 
+
+$app->post("/cart/freight",function(){
+
+
+    $cart = Cart::getFromSession();//pego o carrinho da sessao
+
+    $cart->setFreight($_POST['zipcode']);//passo o cpf para calcular o frete que vem de acordo com o html
+
+    header("Location: /cart");
+    exit;
+
+
+});
 
 
 
