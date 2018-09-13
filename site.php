@@ -372,7 +372,7 @@ $app->post("/profile", function(){
     }
 
     
-
+    $_POST['iduser'] = $user->getiduser();
     $_POST['inadmin'] = $user->getinadmin();//caso a pessoa descubra e tente fazer um ataque injection por post, não irá dar certo pois o ela pega o valor que está no objeto usuario que foi retornado do banco de dados
 
     $_POST['despassword'] = $user->getdespassword();//mesmo caso acima. Assim será sobrescrito os valores mesmo. É como se alterasse a senha sempre pela mesma
@@ -380,8 +380,10 @@ $app->post("/profile", function(){
 
     $user->setData($_POST);//seto os novos dados no objeto
 
-    $user->save();//salvo no banco de dados
+    $user->update();//salvo no banco de dados
     //se ele conseguiu chegar até o save, é que as informacoes foraminseridas corretamente e podemos setar a mensagem de sucesso
+
+    $user->setToSession();
 
     User::setSucess("Dados alterados com sucesso!");
 

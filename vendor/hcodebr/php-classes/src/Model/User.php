@@ -213,9 +213,9 @@ class User extends Model{
 	 		":iduser" => $this->getiduser(),
 	 		":desperson"=>utf8_decode($this->getdesperson()),
 	 		":deslogin"=>$this->getdeslogin(),
-	 		//nao encripto novamente pois quando passo na criacao(admin-users.php) eu ja encripto e a partir dai ela sempre estará dessa forma e nao text. NAO FACO MAIS ISSO
-	 		":despassword"=>User::getPasswordHash($this->getdespassword()),
-	 		// ":despassword"=>$this->getdespassword(),
+	 		//nao encripto novamente pois quando passo na criacao(admin-users.php) eu ja encripto e a partir dai ela sempre estará dessa forma e nao text.
+	 		// ":despassword"=>User::getPasswordHash($this->getdespassword()),
+	 		":despassword"=>$this->getdespassword(),
 	 		":desemail"=>$this->getdesemail(),
 	 		":nrphone"=>$this->getnrphone(),
 	 		":inadmin"=>$this->getinadmin()
@@ -224,6 +224,11 @@ class User extends Model{
 
 	 	$this->setData($results[0]);//o resultado é uma linha
 	 }
+
+	public function setToSession()
+	{
+		$_SESSION[User::SESSION] = $this->getValues();//coloquei os valores do usuario na sessao
+	}
 
 
 
