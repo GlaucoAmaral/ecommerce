@@ -78,7 +78,8 @@ $app->post("/admin/users/create", function(){//parte de insert do usuario
     //No user-create ele esta assumindo valor de "1" somente se a caixa for selecionada.Caso contraria nada. Entao para nao dar erro, colocamos esse if ternario. Se ele for definidor, é 1, caso contrario é zero
     $_POST["inadmin"] = (isset($_POST["inadmin"]))?1:0;
 
-    $_POST['despassword'] = User::getPasswordHash($_POST['despassword']);
+    // $_POST['despassword'] = User::getPasswordHash($_POST['despassword']);
+    $_POST['despassword'] = $_POST['despassword'];//passando a senhha sem estar criptografada. O metodo save fará isso
 
     $user->setData($_POST);
     //No html utilizamos no nome dos campos do html os mesmos nomes da tabela no banco de dados. Entao ele vai criar um atributo para cada um desses valores que a gente tem. Logo comseguimos fazer getdesperson;

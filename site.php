@@ -178,6 +178,8 @@ $app->get("/login", function(){
 
     $page->setTpl("login", array(
         'error'=>User::getError(),//apos o erro ser pegado ele ja eh limpado da variavel super globar $_session
+        'errorRegister'=>User::getErrorRegister(),
+        'registerValues'=>(isset($_SESSION['registerValues'])) ? $_SESSION['registerValues'] : ['name'=>'', 'email'=>'', 'phone'=>'']//para caso a pessoa esqueca um dado na hora de preecnher os dados para o cadastro e nao perder todos os campos que ja preencheu
     ));
 
 }); 
@@ -193,8 +195,6 @@ $app->post("/login", function(){
         User::setError($e->getMessage());
         
     }
-    
-
     header("Location: /checkout");
     exit;
 
@@ -203,8 +203,64 @@ $app->post("/login", function(){
 
 $app->get("/logout", function(){
     User::logout();
+    // ['name'=>'', 'email'=>'', 'phone'=>'']
+    $_SESSION['registerValues'] = NULL;//apos dár logout, os dados do Criar conta estao limpos
     header("Location: /login");
     exit;
+});
+
+
+$app->post("/register", function(){
+
+
+    $_SESSION['registerValues'] = $_POST;//para caso a pessoa esqueca um dado na hora de preecnher os dados para o cadastro e nao perder todos os campos que ja preencheu
+
+    if(!isset($_POST['name']) || $_POST['name'] == '')//caso a pessoa mande sem nome
+    {
+        User::setErrorRegister("Preencha o seu nome.");//seto o erro
+        header("Location: /login");//redireciono para login
+        exit;//paro a execucao do formulario
+    }
+    if(!isset($_POST['email']) || $_POST['email'] == '')//caso a pessoa mande sem nome
+    {
+        User::setErrorRegister("Preencha o seu email.");//seto o erro
+        header("Location: /login");//redireciono para login
+        exit;//paro a execucao do formulario
+    }
+    if(!isset($_POST['password']) || $_POST['password'] == '')//caso a pessoa mande sem nome
+    {
+        User::setErrorRegister("Preencha a senha.");//seto o erro
+        header("Location: /login");//redireciono para login
+        exit;//paro a execucao do formulario
+    }
+    if(User::checkLoginExist($_POST['email']) == true){
+        User::setErrorRegister("Este endereco de email já está sendo usado por outro usuário.");//seto o erro
+        header("Location: /login");//redireciono para login
+        exit;//paro a execucao do formulario
+    }
+
+
+
+    $user = new User();
+
+    $user->setData(array(
+        'inadmin'=>0, //zero pois é um usuario comum
+        'deslogin'=>$_POST['email'],//a forma de entrada do usuario final é com emai, ja adm é por login mesmo
+        'desperson'=>$_POST['name'],
+        'desemail'=>$_POST['email'],
+        'despassword'=>$_POST['password'],
+        'nrphone'=>$_POST['phone']
+    ));
+
+    $user->save();//aqui ocorre o save no bd
+
+    User::login($_POST['email'], $_POST['password']);//apos ele ter feito a conta, eu ja deixo ele logado. ao inves de ter que ir para o checkout e dps o checkout mandar para login
+
+    header("Location: /checkout");
+    exit; 
+
+
+
 });
 
 

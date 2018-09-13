@@ -144,10 +144,6 @@ class User extends Model{
 	}
 
 
-
-
-
-
 	 public function save()//funcao para salvar no banco de dados
 	 {
 	 	$sql = new Sql();
@@ -164,8 +160,8 @@ class User extends Model{
 	 	$results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
 	 		":desperson"=>utf8_decode($this->getdesperson()),
 	 		":deslogin"=>$this->getdeslogin(),
-	 		// ":despassword"=>User::getPasswordHash($this->getdespassword()),
-	 		":despassword"=>$this->getdespassword(),
+	 		":despassword"=>User::getPasswordHash($this->getdespassword()),
+	 		// ":despassword"=>$this->getdespassword(),
 	 		":desemail"=>$this->getdesemail(),
 	 		":nrphone"=>$this->getnrphone(),
 	 		":inadmin"=>$this->getinadmin()
@@ -216,9 +212,9 @@ class User extends Model{
 	 		":iduser" => $this->getiduser(),
 	 		":desperson"=>utf8_decode($this->getdesperson()),
 	 		":deslogin"=>$this->getdeslogin(),
-	 		//nao encripto novamente pois quando passo na criacao eu ja encripto e a partir dai ela sempre estará dessa forma e nao text
-	 		// ":despassword"=>User::getPasswordHash($this->getdespassword()),
-	 		":despassword"=>$this->getdespassword(),
+	 		//nao encripto novamente pois quando passo na criacao(admin-users.php) eu ja encripto e a partir dai ela sempre estará dessa forma e nao text. NAO FACO MAIS ISSO
+	 		":despassword"=>User::getPasswordHash($this->getdespassword()),
+	 		// ":despassword"=>$this->getdespassword(),
 	 		":desemail"=>$this->getdesemail(),
 	 		":nrphone"=>$this->getnrphone(),
 	 		":inadmin"=>$this->getinadmin()
@@ -302,9 +298,6 @@ class User extends Model{
 
 
 
-
-
-
 	public static function validForgotDecrypt($result)
 	{
 		//$result é o codigo encriptografado
@@ -378,11 +371,6 @@ class User extends Model{
 		$_SESSION[User::ERROR] = NULL;
 	}
 
-	public static function setErrorRegister($msg)
-	{
-		$_SESSION[User::ERROR_REGISTER] = $msg;
-	}
-
 
 	public static function getPasswordHash($password)
 	{
@@ -390,6 +378,38 @@ class User extends Model{
 			"cost"=>12     
      ]);
 	}
+
+
+
+	public static function setErrorRegister($msg)
+	{
+		$_SESSION[User::ERROR_REGISTER] = $msg;
+	}
+
+	public static function getErrorRegister()
+	{
+		$msg = (isset($_SESSION[User::ERROR_REGISTER]) && $_SESSION[User::ERROR_REGISTER])?$_SESSION[USer::ERROR_REGISTER]:'';
+		User::clearErrorRegister();//limpar o error
+		return $msg;
+	}
+
+	public static function clearErrorRegister()
+	{
+		$_SESSION[User::ERROR_REGISTER] = NULL;
+
+	}
+
+	public static function checkLoginExist($login)//funcao para validar se um usuario ja está com o email ja cadastrado
+	{
+		 $sql = new Sql();
+
+		 $results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :deslogin", array(
+		 	":deslogin"=>$login
+		 ));//verifico se existe o login com este, e caso results retorne uma linha, ja existe alguem cadastrado com esse email
+		 return (count($results) > 0);
+
+	}
+
 
 
 
