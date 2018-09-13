@@ -328,6 +328,69 @@ $app->post("/forgot/reset", function(){
 /*FIM PARTE DE ESQUECI MINHA SENHA*/
 
 
+$app->get("/profile", function(){
+
+    User::verifyLogin(false);//verifico se a pessoa está logada. Caso contrrio, é necessario
+
+    $user = User::getFromSession();//crio um usuario para passar para o template
+
+    $page = new Page();
+
+    $page->setTpl("profile",array(
+        "user"=>$user->getValues(),//sempre após a pessoa fazer logim, os dados sao colocados no objeto e na session
+        "profileMsg"=>User::getSucess(),
+        "profileError"=>User::getError()
+    ));
+});
+
+$app->post("/profile", function(){
+
+    User::verifyLogin(false);//forco a pessoa estar logada mesmo
+
+
+    //CASO POR POST ELES NAO PREENCHAM OS CAMPOS
+    if(!isset($_POST['desperson']) || $_POST['desperson'] === ''){ 
+        User::setError("Preencha o seu nome.");
+        header("Location: /profile");
+        exit;
+    }
+
+    if(!isset($_POST['desemail']) || $_POST['desemail'] === ''){ 
+            User::setError("Preencha o seu email.");
+            header("Location: /profile");
+            exit;
+    }
+
+    $user = User::getFromSession();//pego o usuario da seessao
+
+    if($_POST['desemail'] !== $user->getdesemail()){//caso a pessoa mude o endereco de email, vamos verificar se o email que ela quer usar ja nao esta cadastrado no bd 
+        if(User::checkLoginExist($_POST['desemail']) === true){
+            User::setError("Este endereco de email já está cadastrado.");
+            header("Location: /profile");
+            exit;
+        }
+    }
+
+    
+
+    $_POST['inadmin'] = $user->getinadmin();//caso a pessoa descubra e tente fazer um ataque injection por post, não irá dar certo pois o ela pega o valor que está no objeto usuario que foi retornado do banco de dados
+
+    $_POST['despassword'] = $user->getdespassword();//mesmo caso acima. Assim será sobrescrito os valores mesmo. É como se alterasse a senha sempre pela mesma
+    $_POST['deslogin'] = $user->getdeslogin();//mesmo caso acima. Assim será sobrescrito os valores mesmo. É como se alterasse a senha sempre pela mesma
+
+    $user->setData($_POST);//seto os novos dados no objeto
+
+    $user->save();//salvo no banco de dados
+    //se ele conseguiu chegar até o save, é que as informacoes foraminseridas corretamente e podemos setar a mensagem de sucesso
+
+    User::setSucess("Dados alterados com sucesso!");
+
+    header("Location: /profile");
+    exit;
+
+
+});
+
 
 
 
