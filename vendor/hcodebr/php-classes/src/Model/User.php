@@ -235,7 +235,7 @@ class User extends Model{
 		));
 	}
 
-	public static function getForgot($email)
+	public static function getForgot($email, $inadmin = true)//agora passo inadmin para a pessoa nao saber a rota de trocar a senha de usuarios administradores
 	{
 		$sql = new Sql();
 		$results = $sql->select("
@@ -280,7 +280,15 @@ class User extends Model{
 	            $result = base64_encode($iv.$code);
 				/*FIM ENCRIPTOGRAFIA*/
 
-                $link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$result";
+				if($inadmin === true)
+				{
+					$link = "http://www.hcodecommerce.com.br/admin/forgot/reset?code=$result";	
+				}
+				else
+				{
+					$link = "http://www.hcodecommerce.com.br/forgot/reset?code=$result";
+				}
+                
 	            
 
 				//esse array passado por ultimo sao os dados para o template que é passado para o forgot.html . Temos a variavel $name e $link no forgot.html
@@ -294,9 +302,6 @@ class User extends Model{
 			}
 		}
 	}
-
-
-
 
 	public static function validForgotDecrypt($result)
 	{
@@ -409,9 +414,6 @@ class User extends Model{
 		 return (count($results) > 0);
 
 	}
-
-
-
 
 }
 ?>
