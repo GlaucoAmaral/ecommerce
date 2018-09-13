@@ -5,7 +5,8 @@ use \Hcode\Page;
 use \Hcode\Model\Product;
 use \Hcode\Model\Category;
 use \Hcode\Model\Cart;
-
+use \Hcode\Model\Address;
+use \Hcode\Model\User;
 
 
 $app->get('/', function() {//criacao da Rota da home do site
@@ -152,9 +153,63 @@ $app->post("/cart/freight",function(){
 
     header("Location: /cart");
     exit;
+});
 
+//apos a pessoa clicar no botao de finalizar compra
+$app->get("/checkout", function(){
+
+    User::verifyLogin(false);//verificar se o usuario esta logado. Como nao é uma rota para o login da administracao, eu passo false para o parametro $inadmin, assim redirecionarei para uma rota de login do tipo usuerio nao administrador. E caso ele nao esteja logado, eh redirecionado para a pagina de login de usuario comum
+
+    $cart = Cart::getFromSession();
+
+    $address = new Address();
+
+    $page = new Page();
+
+    $page->setTpl("checkout", array(
+        'cart'=>$cart->getValues(),
+        'address'=>$address->getValues()
+    ));
+});
+
+$app->get("/login", function(){
+    //é logico que nao faco a verificao de login pois é aqui mesmo que quero que ele faca login
+    $page = new Page();
+
+    $page->setTpl("login", array(
+        'error'=>User::getError(),//apos o erro ser pegado ele ja eh limpado da variavel super globar $_session
+    ));
+
+}); 
+
+$app->post("/login", function(){
+
+    try {
+        //nesse post eu recebo os dados do login e password para fazer o login
+         User::login($_POST['login'], $_POST['password']);
+         //se ocorrer erro ao tentar fazer o login, o erro sai da classe de la e vem para cá, ai eu pego o erro daqui e seto com a funao static da User e depois disso o erro estará na variavel $_SESSION 
+    } catch (Exception $e) {
+
+        User::setError($e->getMessage());
+        
+    }
+    
+
+    header("Location: /checkout");
+    exit;
 
 });
+
+
+$app->get("/logout", function(){
+    User::logout();
+    header("Location: /login");
+    exit;
+});
+
+
+
+
 
 
 

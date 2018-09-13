@@ -114,7 +114,10 @@ class Category extends Model{
 
 		$sql = new Sql();
 
-
+		// Esses comandos SQL nos ajudam na questão da paginação
+		// O SQL_CALC_FOUND_ROWS faz com que o SQL encontre todos os registros correspondentes à busca, mesmo que não sejam retornados
+		// Isso ajuda a encontrar o número de páginas necessárias na paginação
+		// Após a busca ser retornada, basta executar SELECT FOUND_ROWS() e saberá o total de registros
 
 		//primeiro paramatro do limit é a partir de qual registro e o segundo é quantos registros eu quero. a primeira linha sempre é o zero
 		$results =  $sql->select("

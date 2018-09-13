@@ -9,7 +9,8 @@ class User extends Model{
 	//A classe User é um model
 	const SESSION = "User";//constante para no vetor global $_SESSION temos a posicao "User" => dadosDoUSer carregados
 	const SECRET = "HcodePhp7_Secret";//chava para criptografia
-
+	const ERROR = "UserError";
+	const ERROR_REGISTER = "UserErrorRegister";
 
 	public static function getFromSession()
 	{
@@ -25,6 +26,11 @@ class User extends Model{
 
 	}
 
+	// 	O primeiro if(!isset($_SESSION[User::SESSION])) verifica se existe a variável de sessão do usuário, se a sessão foi iniciada
+	// O segundo, if(!$_SESSION[User::SESSION]) verifica se a sessão está com dados
+	// O terceiro if(!(int)$_SESSION[User::SESSION]["iduser"] > 0) confirma se o usuário possui acesso administrativo. Essa é a função da variável $inadmin
+	// 	public static function checkLogin($inadmin = true)
+
 	public static function checkLogin($inadmin = true)
 	{
 		if(
@@ -32,7 +38,7 @@ class User extends Model{
 			||
 			!$_SESSION[User::SESSION]//OU está definida mas está vazia
 			||
-			!(int)$_SESSION[User::SESSION]["iduser"] > 0 //OU esta definido mas id não eh maior que zero, ou seja, nao tem o tal usuario
+			!(int)$_SESSION[User::SESSION]["iduser"] > 0 //OU esta definido mas id NAO eh maior que zero, ou seja, nao tem o tal usuario
 		)
 		{
 			//NAO ESTA LOGADO
@@ -47,7 +53,7 @@ class User extends Model{
 			{
 				return true;
 			}
-			//caso ele esteja logado e nao seja administrador
+			//caso ele esteja logado e nao seja administrador, um usuário COMUM
 			else if($inadmin === false)
 			{
 				return true; 
@@ -66,9 +72,14 @@ class User extends Model{
 	public static function login($login, $password)
 	{
 		$sql = new Sql(); 
-		$results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :LOGIN", array(
+		//query errada, no retorno desta falta informacoes total do usuario
+		// $results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :LOGIN", array(
+		// 	":LOGIN"=>$login
+		// ));
+
+		$results = $sql->select("SELECT * FROM tb_users a INNER JOIN tb_persons b ON a.idperson = b.idperson WHERE a.deslogin = :LOGIN", array(
 			":LOGIN"=>$login
-		));
+			));
 
 		if(count($results) === 0)//nao encontrou nada(nenhuma linha), pois nada foi retornado do banco de dados
 		{ 
@@ -89,6 +100,8 @@ class User extends Model{
 			do método setData(arrayDosDados) na classe Model, que cria os atributos e os getters e setters dinamicamente.
 			 */
 
+			$data['desperson'] = utf8_encode($data['desperson']);//
+
 			$user->setData($data);//chama na classe MOdel e seta os dados.Pois $data vem de uma busca no BD e retorna uma linha 
 
 			$_SESSION[User::SESSION] = $user->getValues();//o campo "User" na variavel global $_SESSION possui todas informacoes de acordo com a busca. Todos os dados ja foram setados DINAMICAMENTE pelo fato de termos o metodo setData com o metodo magico __Call()
@@ -104,8 +117,13 @@ class User extends Model{
 	public static function verifyLogin($inadmin = true)
 	{//se a pessoa nao estiver logoda, ela será redirecionada para a pagina de login
 		if(!User::checkLogin($inadmin)){
+			if($inadmin){
+				header("Location: /admin/login");//se cair em alguma situacao dessa, a pessoa nao está logada e ela é redirecionada para a pagina de login.
+			} else {
+				header("Location: /login");
+			}
 			//mudei para o !funcao pois se a pessoa esta tudo okay, nao tem pq direcionar para a pagina de login. Ja se ela nao estiver logada, ai teremos que redirecionar ela
-			header("Location: /admin/login");//se cair em alguma situacao dessa, a pessoa nao está logada e ela é redirecionada para a pagina de login.
+			//Se a pessoa for da administracao ela redireciona para o tipo de login da administracao, caso contrario, mando ela para o /login que eh de usuario comum
 			exit;
 		}
 	}
@@ -117,8 +135,6 @@ class User extends Model{
 	{
 		$_SESSION[User::SESSION] = NULL;//excluindo a session atual. A posição user no array global será excluida, que antes carregava os dados do usuario na sessao atual.
 	}
-
-
 
 
 	public static function listAll()
@@ -146,8 +162,9 @@ class User extends Model{
 	 	*/
 	 	/*E agora chamamos a procedure que faz tudo. Insere nas duas tabelas os dados*/
 	 	$results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-	 		":desperson"=>$this->getdesperson(),
+	 		":desperson"=>utf8_decode($this->getdesperson()),
 	 		":deslogin"=>$this->getdeslogin(),
+	 		// ":despassword"=>User::getPasswordHash($this->getdespassword()),
 	 		":despassword"=>$this->getdespassword(),
 	 		":desemail"=>$this->getdesemail(),
 	 		":nrphone"=>$this->getnrphone(),
@@ -173,6 +190,8 @@ class User extends Model{
 	 
 	 $data = $results[0];//como é uma pessoa de acordo com o id, ele retorna uma linha somente. e depois seta a data no usuarios para pegarmos la no index.php
 	 
+	 $data['desperson'] = utf8_encode($data['desperson']);//relacionado a acentuacao
+
 	 $this->setData($data);
 	 
 	 }
@@ -195,8 +214,10 @@ class User extends Model{
 	 	/*E agora chamamos a procedure que faz tudo. Insere nas duas tabelas os dados*/
 	 	$results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
 	 		":iduser" => $this->getiduser(),
-	 		":desperson"=>$this->getdesperson(),
+	 		":desperson"=>utf8_decode($this->getdesperson()),
 	 		":deslogin"=>$this->getdeslogin(),
+	 		//nao encripto novamente pois quando passo na criacao eu ja encripto e a partir dai ela sempre estará dessa forma e nao text
+	 		// ":despassword"=>User::getPasswordHash($this->getdespassword()),
 	 		":despassword"=>$this->getdespassword(),
 	 		":desemail"=>$this->getdesemail(),
 	 		":nrphone"=>$this->getnrphone(),
@@ -209,8 +230,6 @@ class User extends Model{
 
 
 
-
-
 	public function delete()
 	{
 		$sql = new Sql();
@@ -219,11 +238,6 @@ class User extends Model{
 			":iduser"=>$this->getiduser()
 		));
 	}
-
-
-
-
-
 
 	public static function getForgot($email)
 	{
@@ -251,8 +265,6 @@ class User extends Model{
 				":desip"=>$_SERVER["REMOTE_ADDR"]
 			));
 			//insere o id e ip numa tabela e retorna esta insercao para $results2
-
-			
 
 			if(count($results2) === 0)
 			{//retorno da procedure.
@@ -303,9 +315,6 @@ class User extends Model{
 	    $idrecovery = openssl_decrypt($code, 'aes-256-cbc', User::SECRET, 0, $iv);
 	    //FIM DESCRIPTOGRAFIA
 
-
-
-
 	    //agora com o id temos que ir no bd fazer a verificacao e ver se ele é valido ou nao com a regra de uma hora. Pois os links de redefinir senha tem uma hora de vida
 		$sql = new Sql();
 		$results = $sql->select("
@@ -333,9 +342,6 @@ class User extends Model{
 	}
 
 
-
-
-
 	public static function setForgotUsed($idrecovery)
 	{
 
@@ -344,8 +350,6 @@ class User extends Model{
 			":idrecovery"=>$idrecovery
 		));//atualizo no banco na tabela tb_userspasswordsrecoveries na coluna dtrecovery a hora que foi feita a mudanca de senha
 	}
-
-
 
 	public function setPassword($password)
 	{
@@ -356,5 +360,38 @@ class User extends Model{
 		));
 	}
 
+	public static function setError($msg){
+		$_SESSION[USer::ERROR] = $msg;
+	}
+
+
+	public static function getError()
+	{
+		$msg = (isset($_SESSION[User::ERROR]) && $_SESSION[User::ERROR])?$_SESSION[User::ERROR]:'';
+		USer::clearError();//apos pegar o erro ja limpo ele
+
+		return $msg;
+	}
+
+	public static function clearError()
+	{
+		$_SESSION[User::ERROR] = NULL;
+	}
+
+	public static function setErrorRegister($msg)
+	{
+		$_SESSION[User::ERROR_REGISTER] = $msg;
+	}
+
+
+	public static function getPasswordHash($password)
+	{
+		return password_hash($password, PASSWORD_DEFAULT, [
+			"cost"=>12     
+     ]);
+	}
+
+
+
 }
- ?>
+?>
