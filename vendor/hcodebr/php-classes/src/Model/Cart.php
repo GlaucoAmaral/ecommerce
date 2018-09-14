@@ -92,6 +92,9 @@ class Cart extends Model {
 
 	public function save()
 	{
+		//o save da carte funciona desse jeito:
+		//se existir ja aquele carrinho no Banco de dados,ele apenas realiza um UDPDATE
+		//caso contrario ele faz um INSERT
 		$sql = new Sql();
 		$results = $sql->select("CALL sp_carts_save(:idcart, :dessessionid, :iduser, :deszipcode, :vlfreight, :nrdays)", [
 			":idcart"=>$this->getidcart(),
@@ -184,7 +187,7 @@ class Cart extends Model {
 		$totals = $this->getProductsTotals();
 
 		if($totals['nrqtd']>0)
-		//se existir algo dentro do carrinho
+		//se existir algo dentro do carrinho, ou seja, a consulta no getProductTotals retornou o valor total com as medidas, pesos e tudo mais...
 		{
 			if($totals['vlheight'] < 2) $totals['vlheight']=2;//o correios nao aceita menor que 2
 			if($totals['vllength'] < 16) $totals['vllength']=16;//o correios nao aceita menor que 16 
@@ -244,7 +247,7 @@ class Cart extends Model {
 
 	public static function getMsgError()
 	{
-		$msg =  (isset($_SESSION[Cart::SESSION_ERROR])) ? $$_SESSION[Cart::SESSION_ERROR]:"";
+		$msg =  (isset($_SESSION[Cart::SESSION_ERROR])) ? $_SESSION[Cart::SESSION_ERROR]:"";
 
 		Cart::clearMsgError();//limpamos a msg da sessao para nao ficar para sempre la
 

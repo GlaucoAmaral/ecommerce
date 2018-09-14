@@ -160,17 +160,119 @@ $app->get("/checkout", function(){
 
     User::verifyLogin(false);//verificar se o usuario esta logado. Como nao é uma rota para o login da administracao, eu passo false para o parametro $inadmin, assim redirecionarei para uma rota de login do tipo usuerio nao administrador. E caso ele nao esteja logado, eh redirecionado para a pagina de login de usuario comum
 
-    $cart = Cart::getFromSession();
-
+	$cart = Cart::getFromSession();
+    
     $address = new Address();
+
+
+    if(isset($_GET['zipcode'])){
+    	$address->loadFromCEP($_GET['zipcode']);//objeto carregado com endereco mas ainda nao está no BD
+
+    	$cart->setdeszipcode($_GET['zipcode']);//seto o zipcode no carrinho(OBJETO) caso a pessoa mude
+    	
+    	$cart->save();//para alterar no carrinho no Banco de dados
+
+    	$cart->getCalculateTotal();//atualizar o valor do FRETE caso a pessoa mude de zipcode as vezess
+
+    }
+
+    //por causa do erro
+    //quando veio para aqui para o /checkout pelo GET, nao vem o 'zipcode' e como nao carregou o endereco pelo IF acima, o endereco está vazio. Na hora que chega no template da o error
+    //logo setamos tudo como vazio para o TEMPLATE	
+    if (!$address->getdesaddress()) $address->setdesaddress('');
+	if (!$address->getdescomplement()) $address->setdescomplement('');
+	if (!$address->getdesdistrict()) $address->setdesdistrict('');
+	if (!$address->getdescity()) $address->setdescity('');
+	if (!$address->getdesstate()) $address->setdesstate('');
+	if (!$address->getdescountry()) $address->setdescountry('');
+	if (!$address->getdeszipcode()) $address->setdeszipcode('');
+	//fim por causa do erro 
+
 
     $page = new Page();
 
     $page->setTpl("checkout", array(
         'cart'=>$cart->getValues(),
-        'address'=>$address->getValues()
+        'address'=>$address->getValues(),
+        'products'=>$cart->getProducts(),
+        'error'=>Address::getMsgError()
     ));
 });
+
+
+$app->post("/checkout", function(){//apos clicar no botão Continuar do checkout
+
+	User::verifyLogin(false);
+	//agora vamos ver se o cliente deixou todos os campos exigidos preenchidos corretamente no formulario
+
+
+	if(!isset($_POST['zipcode']) || $_POST['zipcode'] === '')
+	{
+		Address::setMsgError("Informe o CEP");
+		header("Location: /checkout");
+		exit;
+	}
+
+
+	if(!isset($_POST['desaddress']) || $_POST['desaddress'] === '')
+	{
+		Address::setMsgError("Informe o endereco.");
+		header("Location: /checkout");
+		exit;
+	}
+
+
+	if(!isset($_POST['desdistrict']) || $_POST['desdistrict'] === '')
+	{
+		Address::setMsgError("Informe o bairro.");
+		header("Location: /checkout");
+		exit;
+	}
+
+
+	if(!isset($_POST['descity']) || $_POST['descity'] === '')
+	{
+		Address::setMsgError("Informe a cidade.");
+		header("Location: /checkout");
+		exit;
+	}
+
+
+	if(!isset($_POST['desstate']) || $_POST['desstate'] === '')
+	{
+		Address::setMsgError("Informe o estado");
+		header("Location: /checkout");
+		exit;
+	}
+
+	if(!isset($_POST['descountry']) || $_POST['descountry'] === '')
+	{
+		Address::setMsgError("Informe o país");
+		header("Location: /checkout");
+		exit;
+	}
+
+
+	$user = User::getFromSession();
+
+	$address = new Address();
+
+	$_POST['deszipcode'] = $_POST['zipcode'];//pelo formulario vem zipcode e quando damos o set data, precisamos dos nomes iguais na tabela
+	$_POST['idperson'] = $user->getidperson();
+
+	$address->setData($_POST);
+
+	$address->save();
+
+	header("Location: /order");
+	exit;
+	
+
+
+
+});
+
+
 
 $app->get("/login", function(){
     //é logico que nao faco a verificao de login pois é aqui mesmo que quero que ele faca login
@@ -389,9 +491,10 @@ $app->post("/profile", function(){
 
     header("Location: /profile");
     exit;
-
-
 });
+
+
+
 
 
 
